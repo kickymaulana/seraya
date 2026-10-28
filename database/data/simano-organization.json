@@ -1,0 +1,9 @@
+{
+  "departments": [
+    "ACCOUNTING", "ASAH / GRATING", "BEA CUKAI", "CASTING", "CNC", "COMPOUND", "CRUSHER", "CUCI CELUP", "DIGITAL MARKETING", "EXIM", "FILLING", "FINISH GOOD", "FQC", "GLAZE", "GUDANG", "HRD", "HSE", "IT", "LEGAL", "MOULD", "MOULD DESIGN", "MTC", "OVEN", "PACKING", "PPIC", "PRODUKSI", "PROJECT", "PURCHASING", "QA", "QC", "QC Supporting", "QMR", "QS", "RESEPSIONIS", "RND", "SANITARY", "SECRETARY", "SOLAR", "SPRAY ON HALUS", "SUPIR", "TAPAK", "TEXTURE / SPK", "UMUM", "WASHING", "WATER TREATMENT PLANT"
+  ],
+  "factories": ["DALU 1", "DALU 2", "KIM"],
+  "positions": [
+    {"name": "DIREKSI", "level": 0}, {"name": "GM/FM", "level": 1}, {"name": "FM", "level": 2}, {"name": "SEKRETARIS", "level": 2}, {"name": "MANAGER", "level": 3}, {"name": "SPECIALIST", "level": 3}, {"name": "ASST. MANAJER", "level": 4}, {"name": "HEAD", "level": 4}, {"name": "SENIOR SUPERVISOR", "level": 5}, {"name": "SUPERVISOR", "level": 6}, {"name": "STAFF", "level": 7}, {"name": "LEADER", "level": 8}, {"name": "OPERATOR", "level": 9}, {"name": "UMUM", "level": 9}
+  ]
+}

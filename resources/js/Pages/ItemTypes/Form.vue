@@ -1,0 +1,16 @@
+<script setup lang="ts">
+import { Link, useForm } from '@inertiajs/vue3'
+import { ArrowLeft, Save } from '@lucide/vue'
+
+interface Category { id: number; name: string }
+interface ItemTypeForm { name: string; category_id: string | number; unit: string; is_active: boolean }
+const props = withDefaults(defineProps<{ itemType?: { id: number; name: string; category_id: number; unit: string; is_active: boolean }; categories: Category[] }>(), { itemType: undefined })
+const editing = Boolean(props.itemType)
+const form = useForm<ItemTypeForm>({ name: props.itemType?.name ?? '', category_id: props.itemType?.category_id ?? '', unit: props.itemType?.unit ?? 'UNIT', is_active: props.itemType?.is_active ?? true })
+function uppercase(field: 'name' | 'unit'): void { form[field] = form[field].toUpperCase() }
+function submit(): void { if (editing && props.itemType) form.put(route('item-types.update', props.itemType.id)); else form.post(route('item-types.store')) }
+</script>
+
+<template>
+  <div class="min-h-screen"><header class="border-b bg-white/95 px-4 py-4"><div class="mx-auto flex max-w-3xl items-center gap-3"><Link :href="route('item-types.index')" class="rounded-xl p-2 text-muted-foreground hover:bg-muted"><ArrowLeft class="size-5" /></Link><div><p class="text-xs uppercase tracking-wider text-primary">Data Master</p><h1 class="text-xl font-bold">{{ editing ? 'Edit Jenis Barang' : 'Tambah Jenis Barang' }}</h1></div></div></header><main class="mx-auto max-w-3xl px-4 py-6"><form class="space-y-5 rounded-3xl border bg-card p-5 shadow-sm" @submit.prevent="submit"><div><label for="name" class="mb-2 block text-sm font-medium">Nama barang</label><input id="name" v-model="form.name" class="w-full rounded-xl border bg-background px-4 py-3 outline-none ring-primary focus:ring-2" placeholder="Contoh: SEPATU SAFETY" @input="uppercase('name')"><p v-if="form.errors.name" class="mt-1 text-sm text-red-600">{{ form.errors.name }}</p></div><div><label for="category_id" class="mb-2 block text-sm font-medium">Kategori barang</label><select id="category_id" v-model="form.category_id" class="w-full rounded-xl border bg-background px-4 py-3"><option value="">Pilih kategori</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select><p v-if="form.errors.category_id" class="mt-1 text-sm text-red-600">{{ form.errors.category_id }}</p></div><div><label for="unit" class="mb-2 block text-sm font-medium">Satuan</label><input id="unit" v-model="form.unit" class="w-full rounded-xl border bg-background px-4 py-3" placeholder="Contoh: UNIT" @input="uppercase('unit')"><p v-if="form.errors.unit" class="mt-1 text-sm text-red-600">{{ form.errors.unit }}</p></div><label class="flex items-center gap-3 rounded-xl border p-3"><input v-model="form.is_active" type="checkbox" class="size-5 accent-primary"><span class="text-sm">Jenis barang aktif dan dapat dipilih saat serah terima</span></label><button type="submit" :disabled="form.processing" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground disabled:opacity-60"><Save class="size-4" />{{ form.processing ? 'Menyimpan...' : 'Simpan jenis barang' }}</button></form></main></div>
+</template>
