@@ -21,6 +21,15 @@ class SsoController extends Controller
             return redirect()->route('dashboard');
         }
 
+        return Inertia::render('Auth/Login');
+    }
+
+    public function ssoLogin(Request $request): RedirectResponse|Response
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+
         try {
             return redirect()->away($this->sso->authorizationUrl());
         } catch (\RuntimeException $exception) {
@@ -66,6 +75,6 @@ class SsoController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('sso.login');
+        return redirect()->route('login');
     }
 }

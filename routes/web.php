@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [SsoController::class, 'login'])->name('login');
-    Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+    Route::get('/sso/login', [SsoController::class, 'ssoLogin'])->name('sso.login');
     Route::get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 });
 

@@ -21,7 +21,7 @@ class AuthenticationTest extends TestCase
     {
         auth()->logout();
 
-        $this->get('/login')->assertRedirect();
+        $this->get('/login')->assertOk();
     }
 
     public function test_authenticated_user_can_logout(): void
@@ -29,7 +29,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create(['role' => 'viewer']);
         $this->actingAs($user);
 
-        $this->post('/logout')->assertRedirect('/sso/login');
+        $this->post('/logout')->assertRedirect('/login');
         $this->assertGuest();
     }
 }
