@@ -20,6 +20,7 @@ class ProfileController extends Controller
             'user' => [
                 'name' => $user->name,
                 'email' => $user->email,
+                'tanggal_masuk' => $user->tanggal_masuk?->format('Y-m-d'),
                 'position_id' => $user->position_id,
                 'department_ids' => $user->departments->pluck('id')->values(),
                 'factory_ids' => $user->factories->pluck('id')->values(),

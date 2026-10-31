@@ -3,7 +3,7 @@ import { Link, useForm } from '@inertiajs/vue3'
 import { ArrowLeft, Save } from '@lucide/vue'
 
 interface Option { id: number; name: string; level?: number | null }
-interface ProfileUser { name: string; email: string; position_id: number | null; department_ids: number[]; factory_ids: number[] }
+interface ProfileUser { name: string; email: string; tanggal_masuk: string | null; position_id: number | null; department_ids: number[]; factory_ids: number[] }
 
 const props = defineProps<{ user: ProfileUser; positions: Option[]; departments: Option[]; factories: Option[] }>()
 const form = useForm({
@@ -29,6 +29,7 @@ function submit(): void {
       <section class="rounded-3xl border bg-card p-5 shadow-sm">
         <p class="text-sm text-muted-foreground">Nama</p><p class="font-semibold">{{ user.name }}</p>
         <p class="mt-4 text-sm text-muted-foreground">Email</p><p class="font-semibold">{{ user.email }}</p>
+         <p class="mt-4 text-sm text-muted-foreground">Tanggal masuk</p><p class="font-semibold">{{ user.tanggal_masuk ?? 'Belum tersedia' }}</p>
         <p class="mt-3 text-xs text-muted-foreground">Data identitas berasal dari sekali_login.</p>
       </section>
       <form class="space-y-5" @submit.prevent="submit">

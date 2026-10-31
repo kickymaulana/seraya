@@ -28,8 +28,8 @@ class ReportController extends Controller
 
         $handovers = Handover::query()
             ->with([
-                'sender:id,name',
-                'receiver:id,name',
+                'sender:id,name,tanggal_masuk',
+                'receiver:id,name,tanggal_masuk',
                 'items.itemType:id,name,category_id,unit',
                 'items.itemType.category:id,name',
             ])
