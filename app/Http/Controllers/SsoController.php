@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Hrd\HrdService;
 use App\Services\Sso\SsoService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
@@ -13,7 +14,10 @@ use Inertia\Response;
 
 class SsoController extends Controller
 {
-    public function __construct(private readonly SsoService $sso) {}
+    public function __construct(
+        private readonly SsoService $sso,
+        private readonly HrdService $hrd,
+    ) {}
 
     public function login(Request $request): RedirectResponse|Response
     {
@@ -50,7 +54,9 @@ class SsoController extends Controller
         try {
             $token = $this->sso->exchangeCode($validated['code']);
             $profile = $this->sso->userFromToken($token['access_token'] ?? '');
-            $user = $this->sso->syncUser($profile);
+            $nik = data_get($profile, config('services.sso.field_map.nik'));
+            $employee = $this->hrd->employeeByNik((string) $nik);
+            $user = $this->sso->syncUser($profile, $employee);
 
             Auth::login($user, remember: false);
             $request->session()->regenerate();

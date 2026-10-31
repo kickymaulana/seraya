@@ -56,8 +56,11 @@ class SsoService
         return $this->client()->withToken($token)->get(rtrim($baseUrl, '/').'/api/user')->throw()->json();
     }
 
-    /** @param array<string, mixed> $profile */
-    public function syncUser(array $profile): User
+    /**
+     * @param  array<string, mixed>  $profile
+     * @param  array{nik_karyawan: string, nama_lengkap: string, tanggal_masuk: string}  $employee
+     */
+    public function syncUser(array $profile, array $employee): User
     {
         $map = config('services.sso.field_map');
         $nik = data_get($profile, $map['nik']);
@@ -67,19 +70,20 @@ class SsoService
         }
 
         $user = User::firstOrNew(['nik' => (string) $nik]);
+        if (! (bool) data_get($profile, $map['active'], true)) {
+            throw new RuntimeException('Akun sekali_login tidak aktif.');
+        }
+
         $user->fill([
-            'name' => data_get($profile, $map['name'], 'Pengguna SERAYA'),
+            'name' => $employee['nama_lengkap'],
             'email' => data_get($profile, 'email', $user->email ?: $nik.'@sso'),
             'avatar_url' => data_get($profile, $map['avatar_url']),
             'active' => (bool) data_get($profile, $map['active'], true),
+            'tanggal_masuk' => $employee['tanggal_masuk'],
         ]);
         $user->password ??= str()->random(32);
         $user->role ??= 'viewer';
         $user->save();
-
-        if (! $user->active) {
-            throw new RuntimeException('Akun sekali_login tidak aktif.');
-        }
 
         return $user;
     }

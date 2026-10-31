@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'hrd' => [
+        'employee_url' => env('HRD_EMPLOYEE_URL', 'http://192.168.60.14:7777/hrd_app/api/get_karyawan.php'),
+        'timeout' => env('HRD_TIMEOUT', 10),
+    ],
+
     'sso' => [
         'base_url' => env('SSO_BASE_URL', 'http://localhost:8000'),
         'client_id' => env('SSO_CLIENT_ID'),

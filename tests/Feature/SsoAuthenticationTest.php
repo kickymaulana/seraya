@@ -32,6 +32,7 @@ class SsoAuthenticationTest extends TestCase
     {
         config()->set('services.sso.base_url', 'https://sso.example.test');
         config()->set('services.sso.client_id', 'test-client');
+        config()->set('services.hrd.employee_url', 'https://hrd.example.test/get_karyawan.php');
 
         Http::fake([
             'https://sso.example.test/oauth/token' => Http::response(['access_token' => 'test-token']),
@@ -41,6 +42,15 @@ class SsoAuthenticationTest extends TestCase
                 'email' => 'kicky@example.test',
                 'avatar_url' => 'https://sso.example.test/avatar.jpg',
                 'active' => true,
+            ]),
+            'https://hrd.example.test/get_karyawan.php?nik_karyawan=D260065' => Http::response([
+                'status' => true,
+                'message' => 'Data karyawan ditemukan',
+                'data' => [
+                    'nik_karyawan' => 'D260065',
+                    'nama_lengkap' => 'Kicky Maulana',
+                    'tanggal_masuk' => '2026-02-02',
+                ],
             ]),
         ]);
 
@@ -68,6 +78,7 @@ class SsoAuthenticationTest extends TestCase
 
         config()->set('services.sso.base_url', 'https://sso.example.test');
         config()->set('services.sso.client_id', 'test-client');
+        config()->set('services.hrd.employee_url', 'https://hrd.example.test/get_karyawan.php');
 
         Http::fake([
             'https://sso.example.test/oauth/token' => Http::response(['access_token' => 'test-token']),
@@ -77,6 +88,15 @@ class SsoAuthenticationTest extends TestCase
                 'email' => 'sso@example.test',
                 'active' => true,
             ]),
+            'https://hrd.example.test/get_karyawan.php?nik_karyawan=D260065' => Http::response([
+                'status' => true,
+                'message' => 'Data karyawan ditemukan',
+                'data' => [
+                    'nik_karyawan' => 'D260065',
+                    'nama_lengkap' => 'Kicky Maulana',
+                    'tanggal_masuk' => '2026-02-02',
+                ],
+            ]),
         ]);
 
         $this->get(route('sso.callback', ['code' => 'test-code']))->assertRedirect(route('dashboard'));
@@ -84,8 +104,9 @@ class SsoAuthenticationTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'nik' => 'D260065',
-            'name' => 'Nama dari SSO',
+            'name' => 'Kicky Maulana',
             'email' => 'sso@example.test',
+            'tanggal_masuk' => '2026-02-02 00:00:00',
         ]);
     }
 
@@ -108,5 +129,57 @@ class SsoAuthenticationTest extends TestCase
         $response->assertRedirect(route('sso.login'));
         $response->assertSessionHasErrors('sso');
         $this->assertGuest();
+    }
+
+    public function test_user_with_unknown_hrd_nik_cannot_login_or_be_created(): void
+    {
+        config()->set('services.sso.base_url', 'https://sso.example.test');
+        config()->set('services.sso.client_id', 'test-client');
+        config()->set('services.hrd.employee_url', 'https://hrd.example.test/get_karyawan.php');
+
+        Http::fake([
+            'https://sso.example.test/oauth/token' => Http::response(['access_token' => 'test-token']),
+            'https://sso.example.test/api/user' => Http::response([
+                'nik' => 'D260065',
+                'name' => 'Kicky Maulana',
+                'active' => true,
+            ]),
+            'https://hrd.example.test/get_karyawan.php?nik_karyawan=D260065' => Http::response([
+                'status' => false,
+                'message' => 'NIK karyawan tidak ditemukan',
+                'data' => null,
+            ]),
+        ]);
+
+        $response = $this->get(route('sso.callback', ['code' => 'test-code']));
+
+        $response->assertRedirect(route('sso.login'));
+        $response->assertSessionHasErrors('sso', 'NIK karyawan tidak ditemukan');
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['nik' => 'D260065']);
+    }
+
+    public function test_hrd_connection_failure_rejects_login(): void
+    {
+        config()->set('services.sso.base_url', 'https://sso.example.test');
+        config()->set('services.sso.client_id', 'test-client');
+        config()->set('services.hrd.employee_url', 'https://hrd.example.test/get_karyawan.php');
+
+        Http::fake([
+            'https://sso.example.test/oauth/token' => Http::response(['access_token' => 'test-token']),
+            'https://sso.example.test/api/user' => Http::response([
+                'nik' => 'D260065',
+                'name' => 'Kicky Maulana',
+                'active' => true,
+            ]),
+            'https://hrd.example.test/get_karyawan.php?nik_karyawan=D260065' => Http::failedConnection(),
+        ]);
+
+        $response = $this->get(route('sso.callback', ['code' => 'test-code']));
+
+        $response->assertRedirect(route('sso.login'));
+        $response->assertSessionHasErrors('sso');
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['nik' => 'D260065']);
     }
 }
