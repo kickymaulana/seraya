@@ -10,6 +10,7 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SsoController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function (): void {
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function (): void {
         Route::resource('item-types', ItemTypeController::class)->except(['show', 'destroy']);
         Route::resource('departments', DepartmentController::class)->except(['show', 'destroy']);
         Route::resource('positions', PositionController::class)->except(['show', 'destroy']);
+        Route::resource('users', UserController::class)->only(['index', 'edit', 'update']);
     });
 
     Route::get('/master', MasterDataController::class)->middleware('role:admin')->name('master.index');

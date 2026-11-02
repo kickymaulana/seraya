@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Department;
 use App\Models\ItemType;
 use App\Models\Position;
+use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,6 +20,7 @@ class MasterDataController extends Controller
                 'itemTypes' => ItemType::query()->count(),
                 'departments' => Department::query()->count(),
                 'positions' => Position::query()->count(),
+                'users' => User::query()->count(),
             ],
         ]);
     }
