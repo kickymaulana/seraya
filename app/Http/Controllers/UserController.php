@@ -56,6 +56,7 @@ class UserController extends Controller
             'active' => $validated['active'],
             'position_id' => $validated['position_id'] ?? null,
         ]);
+        $user->syncRoles([$validated['role']]);
         $user->departments()->sync($validated['department_ids']);
         $user->factories()->sync($validated['factory_ids']);
 

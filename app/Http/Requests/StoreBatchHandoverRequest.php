@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ItemType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -80,6 +81,20 @@ class StoreBatchHandoverRequest extends FormRequest
                 if (filled($item['item_type_id'] ?? null) && filled($item['manual_name'] ?? null)) {
                     $validator->errors()->add("items.{$index}.manual_name", 'Gunakan pilihan master atau nama manual, bukan keduanya.');
                 }
+            }
+
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $itemTypeIds = collect($this->input('items', []))->pluck('item_type_id')->filter();
+            $apdItemTypeIds = ItemType::query()
+                ->whereIn('id', $itemTypeIds)
+                ->whereHas('category', fn ($query) => $query->where('name', 'APD'))
+                ->pluck('id');
+
+            if ($apdItemTypeIds->isNotEmpty() && $apdItemTypeIds->count() !== $itemTypeIds->count()) {
+                $validator->errors()->add('items', 'Batch APD harus berisi seluruhnya item kategori APD dan tidak dapat dicampur dengan item lain.');
             }
         }];
     }

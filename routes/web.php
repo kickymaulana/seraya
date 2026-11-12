@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\HandoverApprovalController;
 use App\Http\Controllers\HandoverController;
 use App\Http\Controllers\ItemTypeController;
 use App\Http\Controllers\MasterDataController;
@@ -40,6 +41,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/handovers', [HandoverController::class, 'index'])->name('handovers.index');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/handovers/pending', [HandoverController::class, 'pending'])->name('handovers.pending');
+    Route::get('/handovers/approvals', [HandoverApprovalController::class, 'index'])->middleware('role:hse')->name('handovers.approvals.index');
+    Route::put('/handovers/approvals/{handoverBatch}', [HandoverApprovalController::class, 'update'])->middleware('role:hse')->name('handovers.approvals.update');
     Route::get('/handovers/create', [HandoverController::class, 'create'])->name('handovers.create');
     Route::get('/handovers/receivers/search', [HandoverController::class, 'searchReceivers'])->name('handovers.receivers.search');
     Route::get('/handovers/items/search', [HandoverController::class, 'searchItemTypes'])->name('handovers.items.search');

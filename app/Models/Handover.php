@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['number', 'type', 'sender_id', 'receiver_id', 'status', 'transaction_date', 'purpose', 'notes', 'sender_confirmed_at', 'receiver_confirmed_at'])]
+#[Fillable(['handover_batch_id', 'number', 'type', 'sender_id', 'receiver_id', 'status', 'transaction_date', 'purpose', 'notes', 'sender_confirmed_at', 'receiver_confirmed_at'])]
 class Handover extends Model
 {
     /** @use HasFactory<HandoverFactory> */
@@ -22,6 +22,11 @@ class Handover extends Model
             'sender_confirmed_at' => 'datetime',
             'receiver_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(HandoverBatch::class, 'handover_batch_id');
     }
 
     public function sender(): BelongsTo

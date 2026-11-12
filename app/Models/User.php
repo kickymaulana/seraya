@@ -10,13 +10,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['nik', 'name', 'email', 'password', 'role', 'avatar_url', 'active', 'tanggal_masuk', 'position_id'])]
 #[Hidden(['password', 'remember_token', 'nik'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::created(function (self $user): void {
+            $user->assignRole($user->role ?? 'viewer');
+        });
+    }
 
     protected function casts(): array
     {

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['handover_id', 'item_type_id', 'manual_name', 'manual_unit', 'quantity', 'condition', 'notes'])]
+#[Fillable(['handover_id', 'item_type_id', 'manual_name', 'manual_unit', 'quantity', 'condition', 'notes', 'approval_status', 'rejection_reason'])]
 class HandoverItem extends Model
 {
     /** @use HasFactory<HandoverItemFactory> */

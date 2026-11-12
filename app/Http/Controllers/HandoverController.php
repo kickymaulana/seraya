@@ -7,6 +7,7 @@ use App\Http\Requests\StoreHandoverRequest;
 use App\Models\Department;
 use App\Models\Factory;
 use App\Models\Handover;
+use App\Models\HandoverBatch;
 use App\Models\ItemType;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -32,7 +33,7 @@ class HandoverController extends Controller
     {
         $user = request()->user();
         abort_unless(
-            in_array($user->role, ['admin', 'operator'], true)
+            $user->hasAnyRole(['admin', 'operator', 'hse'])
                 || in_array($user->id, [$handover->sender_id, $handover->receiver_id], true),
             403,
         );
@@ -136,9 +137,20 @@ class HandoverController extends Controller
     public function batchStore(StoreBatchHandoverRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $createdCount = DB::transaction(function () use ($data, $request): int {
+        $isApdBatch = $this->isApdBatch($data['items']);
+
+        $batch = DB::transaction(function () use ($data, $isApdBatch, $request): HandoverBatch {
+            $batch = HandoverBatch::query()->create([
+                'number' => 'BATCH-APD-'.now()->format('YmdHisv').'-'.random_int(100, 999),
+                'sender_id' => $request->user()->id,
+                'status' => $isApdBatch ? 'MENUNGGU_PERSETUJUAN_HSE' : 'TIDAK_MEMERLUKAN_PERSETUJUAN_HSE',
+                'transaction_date' => $data['transaction_date'],
+                'purpose' => $data['purpose'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
             foreach ($data['receiver_ids'] as $receiverId) {
-                $handover = Handover::query()->create([
+                $handover = $batch->handovers()->create([
                     'number' => 'SRY-'.now()->format('YmdHisv').'-'.random_int(100, 999),
                     'type' => $data['type'],
                     'sender_id' => $request->user()->id,
@@ -146,15 +158,22 @@ class HandoverController extends Controller
                     'transaction_date' => $data['transaction_date'],
                     'purpose' => $data['purpose'] ?? null,
                     'notes' => $data['notes'] ?? null,
-                    'status' => 'MENUNGGU_KONFIRMASI',
+                    'status' => $isApdBatch ? 'MENUNGGU_PERSETUJUAN_HSE' : 'MENUNGGU_KONFIRMASI',
                 ]);
-                $handover->items()->createMany($data['items']);
+                $handover->items()->createMany(collect($data['items'])->map(fn (array $item): array => [
+                    ...$item,
+                    'approval_status' => $isApdBatch ? 'MENUNGGU_PERSETUJUAN_HSE' : null,
+                ])->all());
             }
 
-            return count($data['receiver_ids']);
+            return $batch;
         });
 
-        return to_route('handovers.index')->with('success', "{$createdCount} transaksi batch berhasil dibuat.");
+        $message = $isApdBatch
+            ? "Batch {$batch->number} dikirim untuk persetujuan HSE."
+            : "{$batch->handovers()->count()} transaksi batch berhasil dibuat.";
+
+        return to_route('handovers.index')->with('success', $message);
     }
 
     public function downloadPdf(Handover $handover): Response
@@ -184,7 +203,7 @@ class HandoverController extends Controller
     {
         return Inertia::render('Handovers/Pending', [
             'handovers' => Handover::query()
-                ->with(['sender:id,name', 'receiver:id,name', 'items.itemType:id,name,unit'])
+                ->with(['sender:id,name', 'receiver:id,name', 'items' => fn ($query) => $query->where(fn ($itemQuery) => $itemQuery->whereNull('approval_status')->orWhere('approval_status', 'DISETUJUI'))->with('itemType:id,name,unit')])
                 ->where('receiver_id', request()->user()->id)
                 ->whereIn('status', ['MENUNGGU_KONFIRMASI_PENERIMA'])
                 ->latest()
@@ -217,5 +236,19 @@ class HandoverController extends Controller
         ]);
 
         return to_route('handovers.pending')->with('success', 'Penerimaan barang telah dikonfirmasi.');
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     */
+    private function isApdBatch(array $items): bool
+    {
+        $itemTypeIds = collect($items)->pluck('item_type_id')->filter();
+
+        return $itemTypeIds->isNotEmpty()
+            && ItemType::query()
+                ->whereIn('id', $itemTypeIds)
+                ->whereHas('category', fn (Builder $query) => $query->where('name', 'APD'))
+                ->count() === $itemTypeIds->count();
     }
 }
